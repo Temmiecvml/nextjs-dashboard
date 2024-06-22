@@ -2,21 +2,29 @@
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useDebouncedCallback } from 'use-debounce';
 
 export default function ({ placeholder }: { placeholder: string }) {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
+  const searchParams = useSearchParams(); // this hook is a wrapper over URLSearchParams
+  const pathname = usePathname(); // this hook get the main path 
   const { replace } = useRouter();
 
-  function handleSearch(term: string) {
-    const params = new URLSearchParams(searchParams);
+  // handleSearch updates the url as you type
+  // calls are made to the database as the url changes
+  // This could lead to multiple calls in a short space of time
+  // install use-debounce from pnpm and limit the rate at which the function is called
+  const handleSearch = useDebouncedCallback((term: string) => { 
+    console.log(`Searching... ${term}`)
+
+    const params = new URLSearchParams(searchParams); // initialize the URLSearchParams with the current search params
+
     if (term) {
-      params.set('query', term);
+      params.set('query', term); // set the query parameter
     } else {
       params.delete('query');
     }
     replace(`${pathname}?${params.toString()}`);
-  }
+  }, 300) // limit rate to 300 milliseconds
   return (
     <div className="relative flex flex-1 flex-shrink-0">
       <label htmlFor="search" className="sr-only">
